@@ -1,13 +1,17 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { addLibrary } from './pages.dto';
-import { userActvities } from './pages.interface';
+import { UploadedImageDto, addLibrary } from './pages.dto';
+import { uploadImageInterface, userActvities } from './pages.interface';
 import { Model } from 'mongoose';
+import { Response } from 'express';
+import * as path from 'path';
 
 @Injectable()
 export class LibraryService {
   constructor(
     @InjectModel('LibraryPage') private LibraryModel: Model<userActvities>,
+    @InjectModel('UploadImage')
+    private UploadImageModel: Model<uploadImageInterface>,
   ) {}
 
   async AddtoLibrary(addLibrary: addLibrary): Promise<userActvities> {
@@ -27,6 +31,24 @@ export class LibraryService {
       });
     }
     return libraryimages;
+  }
+
+  async saveUploadedImage(
+    uploadimage: UploadedImageDto,
+  ): Promise<uploadImageInterface> {
+    const newuploadedimage = new this.UploadImageModel(uploadimage);
+    return await newuploadedimage.save();
+  }
+
+  async getUploadedImage(userid: string): Promise<uploadImageInterface[]> {
+    const uploadedImages = await this.UploadImageModel.find({ userid: userid });
+
+    if (uploadedImages?.length <= 0) {
+      throw new NotFoundException('user data not found :(');
+    } else {
+      // console.log(uploadedImages);
+      return uploadedImages;
+    }
   }
 
   async unseenCount(userid: string) {

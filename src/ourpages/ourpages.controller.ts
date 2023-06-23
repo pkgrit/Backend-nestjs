@@ -4,6 +4,7 @@ import {
   Get,
   Post,
   Res,
+  Req,
   Param,
   UseGuards,
   HttpStatus,
@@ -13,12 +14,14 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
-import { addLibrary } from './pages.dto';
+import { UploadedImageDto, addLibrary } from './pages.dto';
 import { LibraryService } from './pages.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
 import { diskStorage } from 'multer';
 import * as path from 'path';
+import { uploadImageInterface } from './pages.interface';
+import * as fs from 'fs';
 
 interface FileParams {
   name: string;
@@ -76,7 +79,7 @@ export class PageControllers {
   }
 
   // manually upload the image
-  @Post('data/upload')
+  @Post('data/upload/:id')
   @UseInterceptors(
     FileInterceptor('image', {
       storage: diskStorage({
@@ -87,20 +90,61 @@ export class PageControllers {
       }),
     }),
   )
-  async uploadFile(@Res() res, @UploadedFile() file: Express.Multer.File) {
-    // console.log(file);
+  async uploadFile(
+    @Res() res: any,
+    @Param('id') userid,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    const storedata = { userid: userid, imageaddress: file.filename };
+    const uploadsaved = await this.libraryService.saveUploadedImage(storedata);
+    // console.log(uploadsaved);
     return res.status(HttpStatus.OK).json({
       success: true,
-      data: file.path,
+      // data: file.path,
+      // uploadsaved,
     });
   }
 
   //  Serve the uploaded image
 
-  @Get('data/upload/img')
-  getFile(@Res() res: Response, @Body() file: FileParams) {
-    res.sendFile(path.join(__dirname, '../../src/assets/' + file.name));
+  @Get('data/upload/:id')
+  async getFile(@Res() response: Response, @Param('id') userid) {
+    try {
+      const readuploads = await this.libraryService.getUploadedImage(userid);
+      let images = [];
+      readuploads.map((f) => {
+        // response.status(HttpStatus.OK).json({
+        //   readuploads,
+        // });
+        // response.sendFile(
+        //   path.join(__dirname, '../../src/assets/' + f.imageaddress),
+        // );
+
+        //  // Form Data
+        let imagetosend = path.join(
+          __dirname,
+          '../../src/assets/' + f.imageaddress,
+        );
+        response.sendFile(imagetosend);
+        console.log(imagetosend);
+        const file = fs.readFileSync(imagetosend);
+        const base64String = file.toString('base64');
+        images.push(base64String);
+        // console.log(base64String);
+
+        // return response.send(base64String);
+      });
+      return response.send(images);
+    } catch (err) {
+      return response.status(err.status).json(err.response);
+    }
   }
+
+  // directly search from image id
+  // @Get('data/upload/:id')
+  // getFile(@Res() res: Response, @Body() file: FileParams) {
+  //   res.sendFile(path.join(__dirname, '../../src/assets/' + file.name));
+  // }
 
   @Delete('data/:id')
   async deleteimage(@Res() response: Response, @Param('id') imageId: string) {

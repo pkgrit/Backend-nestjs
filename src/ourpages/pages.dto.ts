@@ -4,3 +4,8 @@ export class addLibrary {
   tags: String;
   seen: Boolean;
 }
+
+export class UploadedImageDto {
+  userid: String;
+  imageaddress: string;
+}

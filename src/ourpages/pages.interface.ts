@@ -7,3 +7,8 @@ export interface userActvities extends Document {
   seen: Boolean;
   createdAt: Date;
 }
+
+export interface uploadImageInterface extends Document {
+  userid: String;
+  imageaddress: string;
+}

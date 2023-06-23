@@ -7,8 +7,10 @@ import { AuthController } from 'src/auth/auth.controller';
 import { AuthService } from 'src/auth/auth.service';
 import { AuthModule } from 'src/auth/auth.module';
 import { PageModule } from './ourpages/ourpages.module';
-import { PassportModule } from '@nestjs/passport';
-import { JwtStrategy } from './auth/jwt.strategy';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
+// import { PassportModule } from '@nestjs/passport';
+// import { JwtStrategy } from './auth/jwt.strategy';
 
 @Module({
   imports: [
@@ -18,6 +20,10 @@ import { JwtStrategy } from './auth/jwt.strategy';
     SharedModule,
     AuthModule,
     PageModule,
+    // MessagesModule,
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'client'),
+    }),
   ],
   controllers: [AppController, AuthController],
   providers: [AppService, AuthService],

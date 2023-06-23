@@ -6,6 +6,6 @@ export class UploadedImage {
   userid: string;
 
   @Prop()
-  image: string;
+  imageaddress: string;
 }
 export const UploadImageSchema = SchemaFactory.createForClass(UploadedImage);
